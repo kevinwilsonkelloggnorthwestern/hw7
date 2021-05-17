@@ -69,7 +69,8 @@ exports.handler = async function(event) {
 
   // get the documents from the query
   let sections = sectionsQuery.docs
-
+  let courseRating = 0
+  let courseRatingCounter = 0
   // loop through the documents
   for (let i=0; i < sections.length; i++) {
     // get the document ID of the section
@@ -94,8 +95,54 @@ exports.handler = async function(event) {
     returnValue.sections.push(sectionObject)
 
     // 🔥 your code for the reviews/ratings goes here
-  }
 
+// ask Firebase for the reviews with the ID provided by the section; hint: read "Retrieve One Document (when you know the Document ID)" in the reference
+   let reviewsQuery = await db.collection('reviews').where(`sectionId`, `==`, sectionId).get()
+//console.log(`sectionid is ${sectionId}`)
+   let reviews = reviewsQuery.docs
+    // loop through reviews of each section   
+//    let reviewsObject = {}
+    let sectionRating = 0
+   
+    for(let reviewsIndex=0; reviewsIndex < reviews.length ; reviewsIndex++)  {
+      let reviewsObject = {}
+    //  console.log(`reviews length is ${reviews.length}`)
+
+//   // get the first review  from the query
+  let review = reviewsQuery.docs[reviewsIndex]
+
+// //// get the data from the returned document
+let reviewData = review.data()
+
+// // add the review body and rating to the review Object
+reviewsObject.review = reviewData.body
+reviewsObject.rating = reviewData.rating
+sectionRating = sectionRating + reviewData.rating
+courseRating = courseRating + reviewData.rating
+courseRatingCounter = courseRatingCounter + 1
+
+// console.log(courseRating)
+// console.log(`counter = ${courseRatingCounter}`)
+
+// // add the section Object to the return value
+returnValue.sections.push(reviewsObject)
+
+//still need to split reviews for each section
+}
+let sectionSummaryObject = {}
+sectionSummaryObject.ratingCount = reviews.length
+sectionSummaryObject.sectionRating = sectionRating / reviews.length
+console.log(sectionSummaryObject)
+returnValue.sections.push(sectionSummaryObject)
+
+
+  }
+  let courseSummaryObject = {}
+  
+  courseSummaryObject.ratingCount = courseRatingCounter
+  courseSummaryObject.courseRating = courseRating / courseRatingCounter
+  console.log(courseSummaryObject)
+  returnValue.sections.push(courseSummaryObject)
   // return the standard response
   return {
     statusCode: 200,
