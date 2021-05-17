@@ -69,6 +69,7 @@ exports.handler = async function(event) {
 
   // get the documents from the query
   let sections = sectionsQuery.docs
+  //set up variables to be used to count total course data
   let courseRating = 0
   let courseRatingCounter = 0
   // loop through the documents
@@ -98,15 +99,15 @@ exports.handler = async function(event) {
 
 // ask Firebase for the reviews with the ID provided by the section; hint: read "Retrieve One Document (when you know the Document ID)" in the reference
    let reviewsQuery = await db.collection('reviews').where(`sectionId`, `==`, sectionId).get()
-//console.log(`sectionid is ${sectionId}`)
+
+   // get reviews data
    let reviews = reviewsQuery.docs
-    // loop through reviews of each section   
-//    let reviewsObject = {}
-    let sectionRating = 0
    
+// create variable to count section rating data
+    let sectionRating = 0
+    // loop through reviews of each section   
     for(let reviewsIndex=0; reviewsIndex < reviews.length ; reviewsIndex++)  {
       let reviewsObject = {}
-    //  console.log(`reviews length is ${reviews.length}`)
 
 //   // get the first review  from the query
   let review = reviewsQuery.docs[reviewsIndex]
@@ -114,21 +115,19 @@ exports.handler = async function(event) {
 // //// get the data from the returned document
 let reviewData = review.data()
 
-// // add the review body and rating to the review Object
+// // add the review body and rating to the review Object incremental section and course rating data
 reviewsObject.review = reviewData.body
 reviewsObject.rating = reviewData.rating
 sectionRating = sectionRating + reviewData.rating
 courseRating = courseRating + reviewData.rating
 courseRatingCounter = courseRatingCounter + 1
 
-// console.log(courseRating)
-// console.log(`counter = ${courseRatingCounter}`)
-
 // // add the section Object to the return value
 returnValue.sections.push(reviewsObject)
 
-//still need to split reviews for each section
+
 }
+//create section object and push reviews data to it
 let sectionSummaryObject = {}
 sectionSummaryObject.ratingCount = reviews.length
 sectionSummaryObject.sectionRating = sectionRating / reviews.length
@@ -137,6 +136,8 @@ returnValue.sections.push(sectionSummaryObject)
 
 
   }
+
+  //create course object and push reviews data to it
   let courseSummaryObject = {}
   
   courseSummaryObject.ratingCount = courseRatingCounter
